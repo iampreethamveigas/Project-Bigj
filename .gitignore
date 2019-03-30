@@ -3,7 +3,7 @@
 # dependencies
 /node_modules
 /.pnp
-/private
+/src/private
 .pnp.js
 
 # testing
