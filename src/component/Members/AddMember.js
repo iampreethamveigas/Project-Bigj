@@ -121,7 +121,7 @@ class ProfileAdd extends React.Component {
         this.setState({ avatar: filename, progress: 100, isUploading: false });
         firebase.storage().ref('images').child(filename).getDownloadURL().then((url, e) => {
             console.log(url, e)
-            this.setState({ avatarURL: url })
+            this.setState({ avatarUrl: url })
         });
     };
 
@@ -138,10 +138,17 @@ class ProfileAdd extends React.Component {
     }
     changeVal = p => { }
 
-    validate = e => {
-        const valid = true
+
+
+
+    componentWillUnmount() {
+
+    }
+    _add_member = async p => {
+        /// check profile image, name, phone, address
+        let valid = true
         const error = {}
-        const { name, church, address, phone } = this.state
+        const { name, church, address, phone, avatarUrl } = this.state
         if (name.length < 5) {
             valid = false
             error.nameError = 'Name must be atleast 5 character long'
@@ -158,40 +165,26 @@ class ProfileAdd extends React.Component {
             valid = false
             error.phoneError = 'Invalid number Format'
         }
-        return valid
-    }
+        if (!!valid) {
+            this.setState({ ...this.state, ...error })
+        }
 
-
-    Submitted = p => {
-        this.setState({
-            isSaving: !this.state.isSaving,
-        })
-        const valid = this.validate()
-        const { name, church, address, phone, imgUrl } = this.state
-        const userId = `${'user' + name + church + phone}`
-        this.adduser({ userId, imgUrl, address, church, name, phone })
-
-        // if (valid) {
-        //     const { name, church, address, phone, imgUrl } = this.state
-        //     const userId = `${'user' + name + church + phone}`
-        //     this.adduser({ userId, imgUrl, address, church, name, phone })
-        // }
-        // else {
-
-        // }
-
-    }
-    componentWillUnmount() {
-
-    }
-    _add_member = p => {
-        firebase.database.ref('Preacher/').set({
-             
-        })
+        if (valid) {
+            const { uid } = firebase.auth().currentUser
+            const { name, church, address, phone, avatarUrl } = this.state
+            const userId = String(name + phone)
+            firebase.database().ref('/Preachers/' + uid + '/' + userId + '/').set({
+                name,
+                church,
+                address,
+                phone,
+                avatarUrl
+            }).then(res => console.log(res))
+        }
     }
     render() {
         const { classes, } = this.props
-        const { avatarURL, isUploading, progress, days, isSaving, saved } = this.state
+        const { avatarUrl, isUploading, progress, days, isSaving, saved } = this.state
         console.log(this.state)
         const imagesClasses = classNames(
             classes.imgRaised,
@@ -204,10 +197,10 @@ class ProfileAdd extends React.Component {
                 <div className={classes.profile1}>
                     <div style={{ height: 350 }}>
 
-                        {avatarURL && <img src={avatarURL} alt='..' className={imagesClasses} />
+                        {avatarUrl && <img src={avatarUrl} alt='..' className={imagesClasses} />
                         }
                         {
-                            !avatarURL && <img src={profile} alt='..' className={imagesClasses} />
+                            !avatarUrl && <img src={profile} alt='..' className={imagesClasses} />
                         }
                         {isUploading && <p>Progress: {progress} </p>}
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -256,8 +249,8 @@ class ProfileAdd extends React.Component {
                         onChange={(e) => this.setState({ address: e.target.value })}
                         margin="normal"
                         variant="outlined"
-                        error={this.state.address  === ""}
-                        helperText={this.state.address  === "" ? 'Empty field!' : ' '}
+                        error={this.state.address === ""}
+                        helperText={this.state.address === "" ? 'Empty field!' : ' '}
 
                     />
                     <TextField
@@ -268,12 +261,12 @@ class ProfileAdd extends React.Component {
                         onChange={(e) => this.setState({ phone: e.target.value })}
                         margin="normal"
                         variant="outlined"
-                         error={this.state.phone === ""}
+                        error={this.state.phone === ""}
                         helperText={this.state.phone === "" ? 'Empty field!' : ' '}
 
                     />
                     <Button size="lg" block fullWidth={false} color="primary" onClick={this._add_member.bind(this)}>
-                        <Typography variant="button" color="textPrimary" style={{color:'#fff'}} > Add Member</Typography>
+                        <Typography variant="button" color="textPrimary" style={{ color: '#fff' }} > Add Member</Typography>
                     </Button>
                 </div>
                 {/* <div className={classes.schedule}>
